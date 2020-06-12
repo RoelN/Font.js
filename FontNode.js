@@ -1,4 +1,6 @@
 import path from 'path';
+import './lib/inflate.js';
+import './lib/unbrotli.js';
 import './Font.js';
 import fs from 'fs';
 
@@ -35,7 +37,7 @@ export default class FontNode extends Font {
 					resolve(data.detail.font);
 				};
 				font.onerror = error => {
-					reject({ error });
+					reject(error);
 				};
 			});
 		}
@@ -47,7 +49,8 @@ export default class FontNode extends Font {
 			.then(arrayBuffer => ({ arrayBuffer, type: getFontCSSFormat(url) }))
 			.then(({ arrayBuffer, type }) => this.fromDataBuffer(arrayBuffer, type))
 			.catch(error => {
-				return { error }
+				this.dispatch(error);
+				if (this.onerror) this.onerror(error);
 			});
 	}
 }
