@@ -1,6 +1,6 @@
+import path from 'path';
 import './Font.js';
 import fs from 'fs';
-import { LC } from './lib/log-color.js';
 
 function getFontCSSFormat(pth) {
 	let pos = pth.lastIndexOf(`.`);
@@ -11,48 +11,43 @@ function getFontCSSFormat(pth) {
 		woff: `woff`,
 		woff2: `woff2`
 	}[ext];
-
-	if (format) return format;
-
-	let msg = {
-		eot: `The .eot format is not supported: it died in January 12, 2016, when Microsoft retired all versions of IE that didn't already support WOFF.`,
-		svg: `The .svg format is not supported: SVG fonts (not to be confused with OpenType with embedded SVG) were so bad we took the entire fonts chapter out of the SVG specification again.`,
-		fon: `The .fon format is not supported: this is an ancient Windows bitmap font format.`,
-		ttc: `Based on the current CSS specification, font collections are not (yet?) supported.`
-	}[ext];
-
-	if (!msg) msg = `${url} is not a font.`;
-
-	this.dispatch(new Event(`error`, {}, msg));
+	return format;
 }
 
-fs.readFileAsync = function (filename) {
-	return new Promise(function (resolve, reject) {
-		fs.readFile(filename, function (err, data) {
-			if (err)
-				reject(err);
-			else
-				resolve(data);
+fs.readFileAsync = (filename) => {
+	return new Promise((resolve, reject) => {
+		fs.readFile(filename, (err, data) => {
+			if (err) reject(err);
+			else resolve(data);
 		});
 	});
 };
 
-class FontNode extends Font {
-	constructor(name, options = {}) {
-		super(name, options);
+export default class FontNode extends Font {
+	constructor(fileRaw, options = {}) {
+		if (fileRaw) {
+			const file = path.normalize(path.resolve(fileRaw)) || '';
+			const name = file.replace(/^.*\/(.*?)(?:\..*?)$/, '$1');
+			const font = super(name, options);
+			font.src = file;
+			return new Promise(function (resolve, reject) {
+				font.onload = data => {
+					resolve(data.detail.font);
+				};
+				font.onerror = error => {
+					reject({ error });
+				};
+			});
+		}
 	}
 
 	loadFont = (url) => {
-		const type = getFontCSSFormat(url);
 		fs.readFileAsync(url)
 			.then(buffer => new Uint8Array(buffer).buffer)
-			.then(arrayBuffer => this.fromDataBuffer(arrayBuffer, type))
-			.catch(err => {
-				const error = `${LC.red}Failed to load font at ${url}${LC.reset}\n${err}\n`;
-				console.error(error);
-				return error
+			.then(arrayBuffer => ({ arrayBuffer, type: getFontCSSFormat(url) }))
+			.then(({ arrayBuffer, type }) => this.fromDataBuffer(arrayBuffer, type))
+			.catch(error => {
+				return { error }
 			});
 	}
 }
-
-global.FontNode = FontNode;
