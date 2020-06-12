@@ -1,15 +1,17 @@
 // Shim for "man" template tag
 
-(function(scope) {
-    scope.man = function man(argv) {
-        const term = argv[0];
-        let data = scope[term].manPage;
-        if (data) {
-            if (typeof data === "string") console.log(data);
-            else console.log(data.text, ...data.styles);
-        }
-    };
-})(window);
+import isBrowser from "../lib/is-browser.js";
+
+(function (scope) {
+	scope.man = function man(argv) {
+		const term = argv[0];
+		let data = scope[term].manPage;
+		if (data) {
+			if (typeof data === "string") console.log(data);
+			else console.log(data.text, ...data.styles);
+		}
+	};
+})(isBrowser() ? window : global);
 
 // data containers
 
@@ -18,9 +20,9 @@ const styles = [];
 
 // manpage writing function
 
-const add = (t, style=``) => {
-    text.push(t);
-    styles.push(`${style};display:block`);
+const add = (t, style = ``) => {
+	text.push(t);
+	styles.push(`${style};display:block`);
 };
 
 // common styles
@@ -60,5 +62,5 @@ add(`For additional information, please visit https://github.com/Pomax/Font.js`)
 
 // Assemble and return
 
-const manPage = { text:`%c${text.join(`%c`)}`, styles };
+const manPage = { text: `%c${text.join(`%c`)}`, styles };
 export { manPage };

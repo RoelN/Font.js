@@ -1,5 +1,5 @@
 // basic inmports
-// import { manPage } from "./src/manpage.js";
+import { manPage } from "./src/manpage.js";
 import { Event, EventManager } from "./src/eventing.js";
 import { SFNT, WOFF, WOFF2 } from "./src/opentype/index.js";
 import { loadTableClasses } from "./src/opentype/tables/createTable.js";
@@ -217,7 +217,7 @@ class Font extends EventManager {
 	}
 }
 
-// Font.manPage = manPage;
+Font.manPage = manPage;
 
 if (isBrowser()) {
 	window.Font = Font;
