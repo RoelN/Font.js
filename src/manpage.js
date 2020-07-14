@@ -1,3 +1,4 @@
+import { context } from "../lib/context.js";
 // Shim for "man" template tag
 
 (function(scope) {
@@ -9,7 +10,7 @@
             else console.log(data.text, ...data.styles);
         }
     };
-})(window);
+})(context);
 
 // data containers
 

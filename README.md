@@ -83,11 +83,7 @@ Also, if you wish to minify the rolled up version of Font.js, I would recommend 
 
 ## Compatibility
 
-This library was designed specifically for use in the browser.
-
-It won't work in Node right now, because Node doesn't have its own `window`, `document`, and Fetch API implementation, but most important: Node.js is absolutely stupid when it comes to loading es modules, and for some idiotic reason demands you call module files `.mjs` instead of just looking for ES import/export statements in `.js` files. And I'm not renaming every file to an `.mjs` extension...
-
-Of course, you can always run the code through whatever babel+webpack solution you probably already have set up, but you'll have to do that yourself. I'm having too much fun writing nice, clean, pure browser code.
+This library works in both the browser as well as [Node.js](##Node.js) v11 or higher.
 
 ## API
 
@@ -120,3 +116,64 @@ Tweet at me! [@TheRealPomax](http://twitter.com/TheRealPomax) or [@TheRealPomax@
 ## And if I just want to use this?
 
 This code is [MIT licensed](https://raw.githubusercontent.com/Pomax/Font.js/master/LICENSE), do whatever you want with it.
+
+## Node.js
+Note that this script requires Node.js, which is best installed using the Node Version Manager (NVM).
+
+### Installing Node on windows:
+1. Install the latest nvm-windows.
+2. In a command prompt, run nvm install latest, then nvm use latest.
+3. Done
+
+### Installing Node on something unixy:
+1. Install nvm.
+2. In a terminal, run nvm install latest, then nvm use latest.
+3. Done
+
+### Install font.js
+To use Font.js in Node.js to load the information of a font file located on the server, run:
+```bash
+$ npm install
+```
+Create an example `font-node.js` file:
+```js
+import Font from 'font-js';
+
+const filePath = './fonts/SourceCodePro-Regular.ttf';
+const font = new Font('SourceCodePro-Regular');
+
+font.onload = () => {
+    // First, let's test some characters:
+    [`a`, `→`, `嬉`].forEach(char => console.log(`Font supports '${char}': ${
+        font.supports(char)
+    }`));
+
+    // Then, let's check some OpenType things
+    const GSUB = font.opentype.tables.GSUB;
+    // Let's figure out which writing scripts this font supports:
+    console.log(`This font supports the following scripts: ${
+        `"${GSUB.getSupportedScripts().join(`", "`)}"`
+    }`);
+    // DFLT is a given, but let's see if `latn` has any special language/system rules...
+    const latn = GSUB.getScriptTable('latn');
+    console.log(`Special langsys for "latn": ${
+        `"${GSUB.getSupportedLangSys(latn).join(`", "`)}"`
+    }`);
+
+    // Wow, "Northern Sami" support? Really? Which OpenType features does that use?
+    const nsm = GSUB.getLangSysTable(latn, "NSM ");
+    console.log(`OpenType features for the Northern Sami version of latin script:`,
+        `"${GSUB.getFeatures(nsm).map(f => f.featureTag).join(`", "`)}"`
+    );
+};
+
+font.onerror = (error) => {
+    console.log('ERROR!', error, '\n');
+};
+
+font.src = filePath;
+```
+Then run it:
+```bash
+$ node font-node
+```

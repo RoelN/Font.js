@@ -3,6 +3,7 @@ import { manPage } from "./src/manpage.js";
 import { Event, EventManager } from "./src/eventing.js";
 import { SFNT, WOFF, WOFF2 } from "./src/opentype/index.js";
 import { loadTableClasses } from "./src/opentype/tables/createTable.js";
+import { context, isBrowser } from "./lib/context.js";
 
 /**
  * either return the appropriate CSS format
@@ -12,7 +13,7 @@ import { loadTableClasses } from "./src/opentype/tables/createTable.js";
  *
  * @param {*} path
  */
-function getFontCSSFormat(path) {
+export function getFontCSSFormat(path) {
     let pos = path.lastIndexOf(`.`);
     let ext = (path.substring(pos + 1) || ``).toLowerCase();
     let format = {
@@ -21,7 +22,7 @@ function getFontCSSFormat(path) {
         woff: `woff`,
         woff2: `woff2`
     }[ext];
-
+    
     if (format) return format;
 
     let msg = {
@@ -30,10 +31,13 @@ function getFontCSSFormat(path) {
         fon: `The .fon format is not supported: this is an ancient Windows bitmap font format.`,
         ttc: `Based on the current CSS specification, font collections are not (yet?) supported.`
     }[ext];
+    if (!msg) msg = `${path} is not a font.`;
 
-    if (!msg) msg = `${url} is not a font.`;
-
-    this.dispatch(new Event(`error`, {}, msg));
+    if(isBrowser) {
+        this.dispatch(new Event(`error`, {}, msg));
+    } else {
+       throw new Error(msg); // Error handling for NodeJS
+    }
 }
 
 
@@ -52,7 +56,7 @@ function checkFetchResponseStatus(response) {
 /**
  * The Font object, which the WebAPIs are still sorely missing.
  */
-class Font extends EventManager {
+export class Font extends EventManager {
     constructor(name, options={}) {
         super();
         this.name = name;
@@ -212,4 +216,6 @@ class Font extends EventManager {
 
 Font.manPage = manPage;
 
-window.Font = Font;
+if(isBrowser) {
+    context.Font = Font;
+}

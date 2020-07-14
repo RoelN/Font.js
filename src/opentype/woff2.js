@@ -1,7 +1,8 @@
 import { SimpleTable } from "./tables/simple-table.js";
 import lazy from "../lazy.js";
+import { context } from "../../lib/context.js";
 
-const brotliDecode = window.unbrotli;
+const brotliDecode = context.unbrotli;
 
 /**
  * The WOFF2 header
